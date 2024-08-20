@@ -1,6 +1,5 @@
 import bcrypt from "bcryptjs";
 import { Request } from "express";
-import { eq, or } from "drizzle-orm";
 import { IAuthSuccess, IAuthFailed } from "./type";
 import { admin } from "../../../../database/models";
 import { IAdminWithRelations } from "../../../../database/models/admin/type";
