@@ -121,7 +121,7 @@ export const destroy = [validate(idValidation), async (req: Request, res: Respon
 
         if (!response) throw new Error("Error deleting contact");
 
-        return ApiResponse.success(res, 'Contact updated');
+        return ApiResponse.success(res, 'Contact deleted');
 
     } catch (error: any) {
 
