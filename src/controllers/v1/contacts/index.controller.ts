@@ -1,192 +1,130 @@
-// import { Request, Response } from 'express';
-// import { validate } from "../../../../../utils/validator";
-// import {
-//     loginValidation,
-//     logoutValidation
-// } from './validations/authValidations';
-// import bcrypt from 'bcrypt';
-// import { deleteAllTokensAndLogoutUser, deleteToken, saveToken } from '../../../../common/services/v1/accessTokens';
-// import PassportAuth from '../../../../../libraries/auth/passport';
-// import { AdminInterface } from '../../../types/user';
-// import ApiResponse from '../../../../../libraries/support/apiResponse';
-// import Admin, { IAdmin } from '../../../models/Admin.model';
-// import AdminGuard from '../../../middleware/adminGuard';
-// import PersonalAccessToken from '../../../../common/models/PersonalAccessToken.model';
-// import Events from '../../../../../libraries/processes/events';
-// import { ELogClassNames } from '../../../../../utils/logClassNames';
-// import { generateDeviceFingerprint } from '../../../../../utils/helpers';
-// import HttpStatus from '../../../../../libraries/support/statusCode';
+import { Request, Response } from "express";
+import { validate } from "../../../utils/validator";
+import { makeValidObjectId } from "../../../utils/helpers";
+import ApiResponse from "../../../libs/support/apiResponse";
+import ContactService from "../../../services/v1/contact/contact.service";
+import { createValidation, idValidation, updateValidation } from "./validations/contact.validation";
 
-// /**
-//  * Login Admin with email/userName and password
-//  * @param {Request} req
-//  * @param {Response} res
-//  * @return {Response}
-//  */
-// export const login = [validate(loginValidation), async (req: Request, res: Response) => {
 
-//     try {
-//         const { email, userName, password } = req.body;
+/**
+ * List all contacts
+ * @param {Request} req
+ * @param {Response} res
+ * @return {Response}
+ */
+export const index = [validate([]), async (req: Request, res: Response) => {
 
-//         const query = (email) ? { email: email } : { userName: userName }
+    try {
 
-//         const user = await Admin.findOne(query);
+        const contacts = await new ContactService().List();
 
-//         if (!user)
-//             return ApiResponse.error(
-//                 res,
-//                 HttpStatus.BAD_REQUEST,
-//                 "Incorrect credentials",
-//                 "Incorrect credentials"
-//             );
+        return ApiResponse.created(res, 'Contacts fetched', contacts);
 
-//         if (!user.password)
-//             return ApiResponse.error(
-//                 res,
-//                 HttpStatus.BAD_REQUEST,
-//                 "Incorrect credentials",
-//                 "Incorrect credentials"
-//             );
+    } catch (error: any) {
 
-//         if (user.disabled)
-//             return ApiResponse.error(
-//                 res,
-//                 HttpStatus.UNAUTHORIZED,
-//                 "Account is currently disabled",
-//                 "Account is currently disabled");
+        return ApiResponse.serverError(res, "Error fetching contacts", error.message || JSON.stringify(error));
+    }
+}];
 
-//         const passwordCheck = await bcrypt.compare(
-//             password,
-//             user.password
-//         );
+/**
+ * Create a new contact
+ * @param {Request} req
+ * @param {Response} res
+ * @return {Response}
+ */
+export const create = [validate(createValidation), async (req: Request, res: Response) => {
 
-//         if (!passwordCheck)
-//             return ApiResponse.error(
-//                 res,
-//                 HttpStatus.BAD_REQUEST,
-//                 "Incorrect credentials",
-//                 "Incorrect credentials"
-//             );
+    try {
+        const { first_name, last_name, phone_number } = req.body;
 
-//         await successLoginResponse(req, user as AdminInterface, res);
+        const contact = await new ContactService().Create({
+            first_name,
+            last_name,
+            phone_number
+        });
 
-//     } catch (error) {
+        return ApiResponse.created(res, 'Contact added', contact);
 
-//         return ApiResponse.serverError(res, "Error authenticating admin");
-//     }
-// }];
+    } catch (error: any) {
 
-// /**
-//  * Logout Admin
-//  * @param {Request} req
-//  * @param {Response} res
-//  * @return {Response}
-//  */
-// export const logout = [validate(logoutValidation), async (req: Request, res: Response) => {
+        return ApiResponse.serverError(res, "Error adding contact", error.message || JSON.stringify(error));
+    }
+}];
 
-//     try {
-//         const { all } = req.query;
 
-//         const user = req.user;
+/**
+ * Show an existing contact
+ * @param {Request} req
+ * @param {Response} res
+ * @return {Response}
+ */
+export const show = [validate(idValidation), async (req: Request, res: Response) => {
 
-//         const bearer = (req.headers.authorization)?.split(" ") || [];
+    try {
 
-//         const token = (bearer?.length > 1) ? bearer[1] : '';
+        const { id } = req.params;
 
-//         const IDENTIFIER = 'AdminModel';
+        const response = await new ContactService().Show(makeValidObjectId(id));
 
-//         let message = "";
+        if (response == null)
+            return ApiResponse.notFound(res, 'Contact not found', 'Contact not found');
 
-//         if (all !== null && Boolean(all)) {
+        return ApiResponse.success(res, 'Data fetched', response);
 
-//             // Remove all tokens
-//             if (user) deleteAllTokensAndLogoutUser(user._id, IDENTIFIER);
+    } catch (error: any) {
 
-//             message = "User logged out of all devices successfully";
-//         } else {
-//             // Remove single token
+        return ApiResponse.serverError(res, "Error fetching contact", error.message || JSON.stringify(error));
+    }
+}];
 
-//             const accessToken = await PersonalAccessToken.findOne({ token: token });
+/**
+ * Update an existing contact
+ * @param {Request} req
+ * @param {Response} res
+ * @return {Response}
+ */
+export const update = [validate(updateValidation), async (req: Request, res: Response) => {
 
-//             if (accessToken) deleteToken(accessToken._id, IDENTIFIER);
+    try {
+        const { first_name, last_name, phone_number } = req.body;
 
-//             message = "User logged out successfully";
-//         }
+        const { id } = req.params;
 
-//         return ApiResponse.success(res, message);
+        const contact = await new ContactService().Update({
+            id: makeValidObjectId(id),
+            ...(first_name) && { first_name },
+            ...(last_name) && { last_name },
+            ...(phone_number) && { phone_number }
+        });
 
-//     } catch (error) {
+        return ApiResponse.success(res, 'Contact updated', contact);
 
-//         return ApiResponse.serverError(res, "Error logging out user", JSON.stringify(error));
-//     }
-// }];
+    } catch (error: any) {
 
-// /**
-//  * Activity Log for user login
-//  * @param {Request} req 
-//  * @param {UserInterface} user 
-//  * @param {Boolean} resumeSession
-//  * @return {void}
-//  */
-// const logAdminSignin = (req: Request, user: IAdmin, resumeSession = false): void => {
+        return ApiResponse.serverError(res, "Error updating contact", error.message || JSON.stringify(error));
+    }
+}];
 
-//     // Log login time
-//     const ipAddress = req.ip;
-//     const userAgent = req.headers['user-agent'];
-//     const loginTime = Date.now();
+/**
+ * Delete an existing contact
+ * @param {Request} req
+ * @param {Response} res
+ * @return {Response}
+ */
+export const destroy = [validate(idValidation), async (req: Request, res: Response) => {
 
-//     Events.dispatch(ELogClassNames.ADMIN_LOGIN, {
-//         user,
-//         ipAddress,
-//         userAgent,
-//         loginTime,
-//         resumeSession
-//     });
-// }
+    try {
 
-// /**
-//  * Successful Admin Login Response
-//  * @param {Request} req
-//  * @param {AdminInterface} user 
-//  * @param {Response} res 
-//  */
-// const successLoginResponse = async (req: Request, user: AdminInterface, res: Response) => {
-//     const token = PassportAuth.genBearerToken();
+        const { id } = req.params;
 
-//     const deviceFingerprint = generateDeviceFingerprint(req);
+        const response = await new ContactService().Delete(makeValidObjectId(id));
 
-//     const { _id, firstName, lastName, disabled, email, roles } = user;
+        if (!response) throw new Error("Error deleting contact");
 
-//     const permissions = await AdminGuard.getPermissions(roles);
+        return ApiResponse.success(res, 'Contact updated');
 
-//     const allRoles = await AdminGuard.getAdminRoles(roles);
+    } catch (error: any) {
 
-//     const accessToken = await saveToken(
-//         user._id,
-//         token,
-//         5,
-//         deviceFingerprint,
-//         true,
-//         'AdminModel'
-//     );
-
-//     logAdminSignin(req, user as AdminInterface)
-
-//     return ApiResponse.success(
-//         res,
-//         "User logged in successfully",
-//         {
-//             user: {
-//                 _id,
-//                 firstName,
-//                 lastName,
-//                 disabled,
-//                 roles: allRoles,
-//                 permissions,
-//                 email,
-//                 token: accessToken.data.token,
-//             }
-//         }
-//     );
-// }
-
+        return ApiResponse.serverError(res, "Error deleting contact", error.message || JSON.stringify(error));
+    }
+}];

@@ -42,6 +42,30 @@ export const createValidation: any[] = [
         .trim()
         .notEmpty()
         .withMessage('Phone number is required')
+        .isString()
+        .isLength({ min: 11, max: 11 })
+        .withMessage('Phone number length should be 11')
+        .matches(/^(?:\+234|0)\d{10}$/)
+];
+
+export const updateValidation: any[] = [
+    ...idValidation,
+    body('first_name')
+        .optional()
+        .trim()
+        .isString()
+        .withMessage('First name should be a valid string')
+        .isLength({ min: 3, max: 100 }),
+    body('last_name')
+        .optional()
+        .trim()
+        .isString()
+        .withMessage('Last name should be a valid string')
+        .isLength({ min: 3, max: 100 }),
+    body('phone_number')
+        .optional()
+        .trim()
+        .isString()
         .isLength({ min: 11, max: 11 })
         .withMessage('Phone number length should be 11')
         .matches(/^(?:\+234|0)\d{10}$/)

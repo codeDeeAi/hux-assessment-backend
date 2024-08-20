@@ -1,8 +1,8 @@
-import { Request, Response } from 'express';
 import express from 'express';
+import { Request, Response } from 'express';
+import HttpStatus from '../libs/support/statusCode';
+import ApiResponse from '../libs/support/apiResponse';
 import { validationResult, ValidationChain } from 'express-validator';
-import ApiResponse from '../libraries/support/apiResponse';
-import HttpStatus from '../libraries/support/statusCode';
 
 interface ErrorRes {
     type: string;
@@ -27,7 +27,7 @@ export const throwValidatorError = (req: Request, res: Response): Response | voi
 
         return ApiResponse.error(
             res,
-            HttpStatus.UNPROCESSABLE,
+            HttpStatus.UNPROCESSABLE_ENTITY,
             msg ? msg : "",
             msg ? msg : "",
             result.array()
@@ -44,7 +44,7 @@ export const validate = (validations: ValidationChain[]) => {
                 const { msg } = result.array()[0]
                 return ApiResponse.error(
                     res,
-                    HttpStatus.UNPROCESSABLE,
+                    HttpStatus.UNPROCESSABLE_ENTITY,
                     msg ? msg : "",
                     msg ? msg : "",
                     result.array()
@@ -81,7 +81,7 @@ export const customResponse = (res: express.Response, error: ErrorRes | Array<Er
 
     return ApiResponse.error(
         res,
-        HttpStatus.UNPROCESSABLE,
+        HttpStatus.UNPROCESSABLE_ENTITY,
         msg ? msg : "",
         msg ? msg : "",
         errors
