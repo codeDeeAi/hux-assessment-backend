@@ -19,6 +19,6 @@ const BlacklistTokenSchema = new Schema(
     }
 );
 
-const BlackListToken = mongoose.model<IBlackListToken>("Contact", BlacklistTokenSchema);
+const BlackListToken = mongoose.model<IBlackListToken>("BlackList", BlacklistTokenSchema);
 
 export default BlackListToken;

@@ -1,192 +1,87 @@
-// import { Request, Response } from 'express';
-// import { validate } from "../../../../../utils/validator";
-// import {
-//     loginValidation,
-//     logoutValidation
-// } from './validations/authValidations';
-// import bcrypt from 'bcrypt';
-// import { deleteAllTokensAndLogoutUser, deleteToken, saveToken } from '../../../../common/services/v1/accessTokens';
-// import PassportAuth from '../../../../../libraries/auth/passport';
-// import { AdminInterface } from '../../../types/user';
-// import ApiResponse from '../../../../../libraries/support/apiResponse';
-// import Admin, { IAdmin } from '../../../models/Admin.model';
-// import AdminGuard from '../../../middleware/adminGuard';
-// import PersonalAccessToken from '../../../../common/models/PersonalAccessToken.model';
-// import Events from '../../../../../libraries/processes/events';
-// import { ELogClassNames } from '../../../../../utils/logClassNames';
-// import { generateDeviceFingerprint } from '../../../../../utils/helpers';
-// import HttpStatus from '../../../../../libraries/support/statusCode';
+import { Request, Response } from "express";
+import { validate } from "../../../utils/validator";
+import HttpStatus from "../../../libs/support/statusCode";
+import ApiResponse from "../../../libs/support/apiResponse";
+import Authentication from "../../../services/v1/auth/authentication.service";
+import { registerValidation, loginValidation } from "./validations/auth.validation";
 
-// /**
-//  * Login Admin with email/userName and password
-//  * @param {Request} req
-//  * @param {Response} res
-//  * @return {Response}
-//  */
-// export const login = [validate(loginValidation), async (req: Request, res: Response) => {
 
-//     try {
-//         const { email, userName, password } = req.body;
+/**
+ * Register user
+ * @param {Request} req
+ * @param {Response} res
+ * @return {Response}
+ */
+export const register = [validate(registerValidation), async (req: Request, res: Response) => {
 
-//         const query = (email) ? { email: email } : { userName: userName }
+    try {
 
-//         const user = await Admin.findOne(query);
+        const { email, name, password } = req.body;
 
-//         if (!user)
-//             return ApiResponse.error(
-//                 res,
-//                 HttpStatus.BAD_REQUEST,
-//                 "Incorrect credentials",
-//                 "Incorrect credentials"
-//             );
+        const user = await new Authentication().Register({
+            email, name, password
+        });
 
-//         if (!user.password)
-//             return ApiResponse.error(
-//                 res,
-//                 HttpStatus.BAD_REQUEST,
-//                 "Incorrect credentials",
-//                 "Incorrect credentials"
-//             );
+        return ApiResponse.created(res, 'User registered successfully', user);
 
-//         if (user.disabled)
-//             return ApiResponse.error(
-//                 res,
-//                 HttpStatus.UNAUTHORIZED,
-//                 "Account is currently disabled",
-//                 "Account is currently disabled");
+    } catch (error: any) {
 
-//         const passwordCheck = await bcrypt.compare(
-//             password,
-//             user.password
-//         );
+        return ApiResponse.serverError(res, "Error registering user", error.message || JSON.stringify(error));
+    }
+}];
 
-//         if (!passwordCheck)
-//             return ApiResponse.error(
-//                 res,
-//                 HttpStatus.BAD_REQUEST,
-//                 "Incorrect credentials",
-//                 "Incorrect credentials"
-//             );
+/**
+ * Login user
+ * @param {Request} req
+ * @param {Response} res
+ * @return {Response}
+ */
+export const login = [validate(loginValidation), async (req: Request, res: Response) => {
 
-//         await successLoginResponse(req, user as AdminInterface, res);
+    try {
+        const { email, password } = req.body;
 
-//     } catch (error) {
+        const result = await new Authentication().Login(email, password);
 
-//         return ApiResponse.serverError(res, "Error authenticating admin");
-//     }
-// }];
+        if (result.code === HttpStatus.OK)
+            return ApiResponse.success(res, result.message, result.data);
 
-// /**
-//  * Logout Admin
-//  * @param {Request} req
-//  * @param {Response} res
-//  * @return {Response}
-//  */
-// export const logout = [validate(logoutValidation), async (req: Request, res: Response) => {
+        const { code, message, error, errors } = result;
 
-//     try {
-//         const { all } = req.query;
+        return ApiResponse.jsonRes(res, code, message, null, error, errors);
 
-//         const user = req.user;
+    } catch (error: any) {
 
-//         const bearer = (req.headers.authorization)?.split(" ") || [];
+        return ApiResponse.serverError(res, "Error authenticating user", error.message || JSON.stringify(error));
+    }
+}];
 
-//         const token = (bearer?.length > 1) ? bearer[1] : '';
+/**
+ * Logout user
+ * @param {Request} req
+ * @param {Response} res
+ * @return {Response}
+ */
+export const logout = [validate([]), async (req: Request, res: Response) => {
 
-//         const IDENTIFIER = 'AdminModel';
+    try {
+        const token = req.header('Authorization');
 
-//         let message = "";
+        if(!token)
+            return ApiResponse.badRequest(res, 'Invalid or missing token');
 
-//         if (all !== null && Boolean(all)) {
+        console.log({ token });
 
-//             // Remove all tokens
-//             if (user) deleteAllTokensAndLogoutUser(user._id, IDENTIFIER);
+        const result = await new Authentication().Logout(token);
 
-//             message = "User logged out of all devices successfully";
-//         } else {
-//             // Remove single token
+        if (!result)
+            throw new Error("Error logging out user");
 
-//             const accessToken = await PersonalAccessToken.findOne({ token: token });
 
-//             if (accessToken) deleteToken(accessToken._id, IDENTIFIER);
+        return ApiResponse.success(res, 'User logged out successfully', null);
 
-//             message = "User logged out successfully";
-//         }
+    } catch (error: any) {
 
-//         return ApiResponse.success(res, message);
-
-//     } catch (error) {
-
-//         return ApiResponse.serverError(res, "Error logging out user", JSON.stringify(error));
-//     }
-// }];
-
-// /**
-//  * Activity Log for user login
-//  * @param {Request} req 
-//  * @param {UserInterface} user 
-//  * @param {Boolean} resumeSession
-//  * @return {void}
-//  */
-// const logAdminSignin = (req: Request, user: IAdmin, resumeSession = false): void => {
-
-//     // Log login time
-//     const ipAddress = req.ip;
-//     const userAgent = req.headers['user-agent'];
-//     const loginTime = Date.now();
-
-//     Events.dispatch(ELogClassNames.ADMIN_LOGIN, {
-//         user,
-//         ipAddress,
-//         userAgent,
-//         loginTime,
-//         resumeSession
-//     });
-// }
-
-// /**
-//  * Successful Admin Login Response
-//  * @param {Request} req
-//  * @param {AdminInterface} user 
-//  * @param {Response} res 
-//  */
-// const successLoginResponse = async (req: Request, user: AdminInterface, res: Response) => {
-//     const token = PassportAuth.genBearerToken();
-
-//     const deviceFingerprint = generateDeviceFingerprint(req);
-
-//     const { _id, firstName, lastName, disabled, email, roles } = user;
-
-//     const permissions = await AdminGuard.getPermissions(roles);
-
-//     const allRoles = await AdminGuard.getAdminRoles(roles);
-
-//     const accessToken = await saveToken(
-//         user._id,
-//         token,
-//         5,
-//         deviceFingerprint,
-//         true,
-//         'AdminModel'
-//     );
-
-//     logAdminSignin(req, user as AdminInterface)
-
-//     return ApiResponse.success(
-//         res,
-//         "User logged in successfully",
-//         {
-//             user: {
-//                 _id,
-//                 firstName,
-//                 lastName,
-//                 disabled,
-//                 roles: allRoles,
-//                 permissions,
-//                 email,
-//                 token: accessToken.data.token,
-//             }
-//         }
-//     );
-// }
-
+        return ApiResponse.serverError(res, "Error logging out user", error.message || JSON.stringify(error));
+    }
+}];

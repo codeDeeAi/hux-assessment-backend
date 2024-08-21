@@ -1,10 +1,5 @@
-import HttpStatus from "../../../libs/support/statusCode";
 import { Types } from "mongoose";
-
-interface IAuthRole {
-    id: number;
-    name: string;
-}
+import HttpStatus from "../../../libs/support/statusCode";
 
 export interface IRegister {
     name: string;
