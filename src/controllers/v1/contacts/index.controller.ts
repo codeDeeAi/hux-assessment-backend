@@ -16,7 +16,7 @@ export const index = [validate([]), async (req: Request, res: Response) => {
 
     try {
 
-        const contacts = await new ContactService().List();
+        const contacts = await new ContactService(req).List();
 
         return ApiResponse.success(res, 'Contacts fetched', contacts);
 
@@ -37,7 +37,7 @@ export const create = [validate(createValidation), async (req: Request, res: Res
     try {
         const { first_name, last_name, phone_number } = req.body;
 
-        const contact = await new ContactService().Create({
+        const contact = await new ContactService(req).Create({
             first_name,
             last_name,
             phone_number
@@ -64,7 +64,7 @@ export const show = [validate(idValidation), async (req: Request, res: Response)
 
         const { id } = req.params;
 
-        const response = await new ContactService().Show(makeValidObjectId(id));
+        const response = await new ContactService(req).Show(makeValidObjectId(id));
 
         if (response == null)
             return ApiResponse.notFound(res, 'Contact not found', 'Contact not found');
@@ -90,7 +90,7 @@ export const update = [validate(updateValidation), async (req: Request, res: Res
 
         const { id } = req.params;
 
-        const contact = await new ContactService().Update({
+        const contact = await new ContactService(req).Update({
             id: makeValidObjectId(id),
             ...(first_name) && { first_name },
             ...(last_name) && { last_name },
@@ -117,7 +117,7 @@ export const destroy = [validate(idValidation), async (req: Request, res: Respon
 
         const { id } = req.params;
 
-        const response = await new ContactService().Delete(makeValidObjectId(id));
+        const response = await new ContactService(req).Delete(makeValidObjectId(id));
 
         if (!response) throw new Error("Error deleting contact");
 

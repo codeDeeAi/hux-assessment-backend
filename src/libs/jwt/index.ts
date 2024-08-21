@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
 import Env from "../support/env";
+import { Request } from "express";
 import jsonwebtoken from 'jsonwebtoken';
 import BlackListToken from "../../models/BlacklistToken.model";
 
@@ -44,6 +45,35 @@ export default class JWT {
             const query = await BlackListToken.findOne({ token: token })
 
             if (query)
+                return null;
+
+            if (!('user_id' in decoded))
+                return null;
+
+            return decoded.user_id;
+
+        } catch (error: any) {
+
+            throw new Error(error?.message || JSON.stringify(error));
+
+        }
+    }
+
+    /**
+     * Extracts the authenticated user ID from the Authorization header of a request.
+     *
+     * @param {Request} req - The HTTP request object.
+     * @returns {string | null} - The user ID if the token is valid and contains a `user_id`, otherwise `null`.
+     * @throws {Error} - If there is an issue with verifying the token, an error is thrown.
+     */
+    public static AuthId(req: Request): string | null {
+        try {
+
+            const token = req.header('Authorization')?.split(" ")[1] || "";
+
+            const decoded = jsonwebtoken.verify(token, Env.JWT_SECRET_KEY);
+
+            if (typeof decoded === 'string')
                 return null;
 
             if (!('user_id' in decoded))

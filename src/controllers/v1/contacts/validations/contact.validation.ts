@@ -77,6 +77,7 @@ export const updateValidation: any[] = [
         .isLength({ min: 11, max: 11 })
         .withMessage('Phone number length should be 11')
         .matches(/^(?:\+234|0)\d{10}$/)
+        .withMessage('Phone number length should be a valid nigerian number (070)')
         .custom(async (value, { req }) => {
             const query = await Contact.findOne({ phone_number: value, _id: { $ne: makeValidObjectId(req.params?.id) } });
 

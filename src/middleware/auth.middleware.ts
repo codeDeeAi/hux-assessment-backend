@@ -22,7 +22,7 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
                 'You are unauthenticated');
 
     try {
-        
+
         const id = await JWT.Verify(token);
 
         if (id == null)

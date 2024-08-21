@@ -1,5 +1,8 @@
 import { Types } from "mongoose";
+import { Request } from "express";
+import JWT from "../../../libs/jwt";
 import { ICreate, IUpdate } from "./type";
+import { makeValidObjectId } from "../../../utils/helpers";
 import Contact, { IContact } from "../../../models/Contact.model";
 
 /**
@@ -9,8 +12,13 @@ import Contact, { IContact } from "../../../models/Contact.model";
  */
 export default class ContactService {
 
-    constructor() {
-        //
+    private req: Request;
+    private userId: Types.ObjectId;
+
+    constructor(req: Request) {
+        this.req = req;
+
+        this.userId = makeValidObjectId(JWT.AuthId(req) as string);
     }
 
 
@@ -22,7 +30,7 @@ export default class ContactService {
     public async List(): Promise<IContact[]> {
         try {
 
-            const contacts = await Contact.find();
+            const contacts = await Contact.find({ user_id: this.userId });
 
             return contacts as IContact[];
 
@@ -42,7 +50,7 @@ export default class ContactService {
     public async Show(id: Types.ObjectId): Promise<IContact | null> {
         try {
 
-            const contact = await Contact.findOne({ _id: id });
+            const contact = await Contact.findOne({ _id: id, user_id: this.userId });
 
             if (!contact) return null;
 
@@ -64,7 +72,7 @@ export default class ContactService {
     public async Create(options: ICreate): Promise<IContact> {
         try {
 
-            const contact = await new Contact(options).save();
+            const contact = await new Contact({ ...options, user_id: this.userId }).save();
 
             if (!contact) throw new Error("Error creating contact");
 
@@ -86,7 +94,7 @@ export default class ContactService {
 
             const { id, first_name, last_name, phone_number } = options;
 
-            const contact = await Contact.findOneAndUpdate({ _id: id }, {
+            const contact = await Contact.findOneAndUpdate({ _id: id, user_id: this.userId }, {
                 ...(first_name) && { first_name },
                 ...(last_name) && { last_name },
                 ...(phone_number) && { phone_number },
@@ -110,7 +118,7 @@ export default class ContactService {
     public async Delete(id: Types.ObjectId): Promise<boolean> {
         try {
 
-            const deleted = await Contact.findOneAndDelete({ _id: id });
+            const deleted = await Contact.findOneAndDelete({ _id: id, user_id: this.userId });
 
             return deleted !== null;
 
