@@ -54,6 +54,10 @@ Hux Ventures Contacts App is a backend server designed for managing contacts. It
    SERVER_HOST=localhost
    JWT_SECRET_KEY=<your-generated-key>
    ```
+   
+6. **Link to API Documentation**:
+   You can view the Api documentation here [https://documenter.getpostman.com/view/37802148/2sA3sAiTV1](https://documenter.getpostman.com/view/37802148/2sA3sAiTV1)
+
 
 ## Scripts
 
@@ -127,10 +131,6 @@ The API uses a standardized response format for success and error messages:
     "errors": [<OPTIONAL_ERROR_ARRAY>]
   }
   ```
-
-## Contributing
-
-Feel free to fork the repository and submit pull requests. For any issues or feature requests, please open an issue on the repository.
 
 ## License
 
