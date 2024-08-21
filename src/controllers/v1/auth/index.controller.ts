@@ -65,7 +65,7 @@ export const login = [validate(loginValidation), async (req: Request, res: Respo
 export const logout = [validate([]), async (req: Request, res: Response) => {
 
     try {
-        const token = req.header('Authorization');
+        const token = req.header('Authorization')?.split(" ")[1] || "";
 
         if(!token)
             return ApiResponse.badRequest(res, 'Invalid or missing token');

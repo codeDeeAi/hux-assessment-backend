@@ -11,7 +11,7 @@ import { Request, Response, NextFunction } from 'express';
  * @returns 
  */
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
-    const token = req.header('Authorization');
+    const token = req.header('Authorization')?.split(" ")[1] || "";
 
     if (!token)
         return ApiResponse
@@ -22,7 +22,7 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
                 'You are unauthenticated');
 
     try {
-
+        
         const id = await JWT.Verify(token);
 
         if (id == null)

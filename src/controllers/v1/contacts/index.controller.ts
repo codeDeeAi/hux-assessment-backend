@@ -18,7 +18,7 @@ export const index = [validate([]), async (req: Request, res: Response) => {
 
         const contacts = await new ContactService().List();
 
-        return ApiResponse.created(res, 'Contacts fetched', contacts);
+        return ApiResponse.success(res, 'Contacts fetched', contacts);
 
     } catch (error: any) {
 

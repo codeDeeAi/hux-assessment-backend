@@ -42,7 +42,7 @@ export default class ContactService {
     public async Show(id: Types.ObjectId): Promise<IContact | null> {
         try {
 
-            const contact = await Contact.find({ _id: id });
+            const contact = await Contact.findOne({ _id: id });
 
             if (!contact) return null;
 
