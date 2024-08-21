@@ -12,6 +12,6 @@
     "lib": ["ES2022"],
     "typeRoots": ["./node_modules/@types", "./types"]
   },
-  "include": ["**/*.ts", "types.d.ts"],
+  "include": ["**/*.ts", "index.d.ts"],
   "exclude": ["node_modules"]
 }
