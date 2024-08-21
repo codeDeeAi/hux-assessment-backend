@@ -1,18 +1,6 @@
 import { Types } from "mongoose";
+import { ICreate, IUpdate } from "./type";
 import Contact, { IContact } from "../../../models/Contact.model";
-
-export interface ICreate {
-    first_name: string;
-    last_name: string;
-    phone_number: string;
-}
-
-export interface IUpdate {
-    id: Types.ObjectId;
-    first_name?: string;
-    last_name?: string;
-    phone_number?: string;
-}
 
 /**
  * Service class for managing contacts.

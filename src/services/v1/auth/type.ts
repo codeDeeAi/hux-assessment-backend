@@ -1,22 +1,30 @@
 import HttpStatus from "../../../libs/support/statusCode";
+import { Types } from "mongoose";
 
 interface IAuthRole {
     id: number;
     name: string;
 }
 
+export interface IRegister {
+    name: string;
+    email: string;
+    password: string;
+}
+
+export interface IRegisterRes {
+    name: string;
+    email: string;
+    _id: Types.ObjectId;
+}
+
 export interface IAuthSuccess {
     code: HttpStatus.OK,
     message: string;
     data: {
-        id: string | number;
-        first_name: string;
-        last_name: string;
+        id: string;
+        name: string;
         email: string;
-        staff_id: string;
-        avatar: string | null;
-        roles: Array<IAuthRole>;
-        permissions: Array<string>;
         token: string;
     }
 }

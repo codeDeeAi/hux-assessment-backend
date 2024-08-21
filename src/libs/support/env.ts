@@ -13,6 +13,7 @@ const Env = {
   RATE_LIMIT_USE_STANDARD_HEADERS: process.env.RATE_LIMIT_USE_STANDARD_HEADERS === "true",
   RATE_LIMIT_USE_LEGACY_HEADERS: process.env.RATE_LIMIT_USE_LEGACY_HEADERS === "false",
   ALLOWED_CORS_URLS: process.env.ALLOWED_CORS_URLS || "",
+  JWT_SECRET_KEY: process.env.JWT_SECRET_KEY || ""
 };
 
 export default Env;

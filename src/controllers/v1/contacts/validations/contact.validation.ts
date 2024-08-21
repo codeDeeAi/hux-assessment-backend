@@ -1,6 +1,6 @@
 import { body, param } from "express-validator";
 import Contact from "../../../../models/Contact.model";
-import { isValidObjectId } from "../../../../utils/helpers";
+import { isValidObjectId, makeValidObjectId } from "../../../../utils/helpers";
 
 export const idValidation: any[] = [
     param('id')
@@ -46,6 +46,14 @@ export const createValidation: any[] = [
         .isLength({ min: 11, max: 11 })
         .withMessage('Phone number length should be 11')
         .matches(/^(?:\+234|0)\d{10}$/)
+        .custom(async (value) => {
+            const query = await Contact.findOne({ phone_number: value });
+
+            if (query)
+                return Promise.reject('Phone number is taken');
+
+            return true;
+        })
 ];
 
 export const updateValidation: any[] = [
@@ -69,4 +77,12 @@ export const updateValidation: any[] = [
         .isLength({ min: 11, max: 11 })
         .withMessage('Phone number length should be 11')
         .matches(/^(?:\+234|0)\d{10}$/)
+        .custom(async (value, { req }) => {
+            const query = await Contact.findOne({ phone_number: value, _id: { $ne: makeValidObjectId(req.params?.id) } });
+
+            if (query)
+                return Promise.reject('Phone number is taken');
+
+            return true;
+        })
 ];
