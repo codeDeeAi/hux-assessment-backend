@@ -1,8 +1,7 @@
-import jsonwebtoken from 'jsonwebtoken';
+import JWT from '../libs/jwt';
+import HttpStatus from '../libs/support/statusCode';
 import ApiResponse from '../libs/support/apiResponse';
 import { Request, Response, NextFunction } from 'express';
-import HttpStatus from '../libs/support/statusCode';
-import JWT from '../libs/jwt';
 
 /**
  * Middleware to verify JWT token and protect routes
@@ -11,7 +10,7 @@ import JWT from '../libs/jwt';
  * @param {NextFunction} next
  * @returns 
  */
-const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
+export const protect = async (req: Request, res: Response, next: NextFunction) => {
     const token = req.header('Authorization');
 
     if (!token)
@@ -34,8 +33,6 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
                     'Access denied',
                     'Invalid token');
 
-        req.user_id = id;
-
         next();
 
     } catch (error: any) {
@@ -47,5 +44,3 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
                 'Invalid token');
     }
 };
-
-module.exports = verifyToken;

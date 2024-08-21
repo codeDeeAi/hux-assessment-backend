@@ -70,8 +70,6 @@ export const logout = [validate([]), async (req: Request, res: Response) => {
         if(!token)
             return ApiResponse.badRequest(res, 'Invalid or missing token');
 
-        console.log({ token });
-
         const result = await new Authentication().Logout(token);
 
         if (!result)

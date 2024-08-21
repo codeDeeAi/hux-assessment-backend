@@ -76,7 +76,7 @@ export default class Authentication {
                     error: 'Incorrect credentials'
                 } as IAuthFailed;
 
-            if (!bcrypt.compareSync(user.password, password))
+            if (!bcrypt.compareSync(password, user.password))
                 return {
                     code: 400,
                     message: 'Incorrect credentials',
